@@ -1,18 +1,17 @@
 """Gunicorn configuration for production"""
-import multiprocessing
 import os
 
-# Адрес и порт
+# Адрес и порт (Render использует PORT env var)
 bind = f"0.0.0.0:{os.environ.get('PORT', '5000')}"
 
-# Workers
-workers = multiprocessing.cpu_count() * 2 + 1
+# Workers (для бесплатного тира Render — 1 воркер)
+workers = int(os.environ.get('WEB_CONCURRENCY', 1))
 worker_class = 'sync'
 worker_connections = 1000
 
-# Timeout
+# Timeout (Render требует больше времени)
 timeout = 120
-graceful_timeout = 30
+graceful_timeout = 60
 
 # Logging
 accesslog = '-'
