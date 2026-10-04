@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход — ModelMarkt</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-box">
+            <h1>Вход в аккаунт</h1>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Логин</label>
+                    <input type="text" id="login-username" name="username" required placeholder="Введите логин">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Пароль</label>
+                    <input type="password" id="login-password" name="password" required placeholder="Введите пароль">
+                </div>
+                <div id="login-error" class="error-message"></div>
+                <button type="submit" class="btn btn-primary btn-block">Войти</button>
+            </form>
+            <p class="auth-link">Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+            <p class="auth-link"><a href="/">← Вернуться к моделям</a></p>
+        </div>
+    </div>
+    <script src="/static/js/auth.js"></script>
+</body>
+</html>

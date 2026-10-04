@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModelMarkt — Маркетплейс 3D-моделей</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">MM</span> ModelMarkt
+        </div>
+        <div class="nav-links">
+            <a href="/" class="active">Главная</a>
+            <a href="/map">Карта</a>
+            <a href="/premium">Премиум</a>
+            <a href="/translate">Переводчик</a>
+            <div id="auth-buttons">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/register" id="register-link">Регистрация</a>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="username-display"></span>
+                <span id="premium-badge" style="display:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:2px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;">★ PREMIUM</span>
+                <a href="/admin" id="admin-link" style="display:none;">⚙️ Админка</a>
+                <button id="logout-btn" class="btn btn-sm">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1>🚀 ModelMarkt — Маркетплейс 3D-моделей</h1>
+            <p>Создавайте, загружайте и просматривайте 3D-модели в браузере</p>
+            <div class="hero-actions">
+                <a href="#catalog" class="btn btn-primary">🔍 Каталог моделей</a>
+                <a href="/premium" class="btn btn-secondary">⭐ Премиум</a>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Поиск по моделям...">
+                <button class="btn btn-primary" onclick="searchBuildings()">Найти</button>
+            </div>
+        </section>
+
+        <!-- Избранные модели -->
+        {% if featured_models %}
+        <section class="featured-section">
+            <h2>⭐ Избранные 3D-модели</h2>
+            <div class="models-grid">
+                {% for model in featured_models %}
+                <div class="model-card" onclick="openViewer({{ model.id }})">
+                    <div class="model-preview">
+                        {{ model.file_type|upper }}
+                    </div>
+                    <div class="model-info">
+                        <h3>{{ model.name }}</h3>
+                        <span class="model-type">{{ model.file_type|upper }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Регионы -->
+        <section id="regions" class="catalog-section">
+            <h2>🗺️ Регионы</h2>
+            <div class="regions-grid" id="regions-grid">
+                <div class="empty-state">
+                    <div class="icon">🗺️</div>
+                    <h3>Регионов пока нет</h3>
+                    <p>Добавьте регионы через админ-панель</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Категории -->
+        <section id="catalog" class="catalog-section">
+            <h2>📦 Каталог моделей</h2>
+            <div id="models-grid" class="models-grid">
+                <div class="empty-state">
+                    <div class="icon">📦</div>
+                    <h3>Загружайте 3D-модели</h3>
+                    <p>Войдите как администратор и загрузите первую модель</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Здания -->
+        <section id="buildings" class="catalog-section">
+            <h2>🏛️ Исторические здания</h2>
+            <div id="buildings-grid" class="models-grid">
+                <div class="empty-state">
+                    <div class="icon">🏛️</div>
+                    <h3>Зданий пока нет</h3>
+                    <p>Добавьте исторические здания через админ-панель</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Статистика -->
+        <section class="stats-section">
+            <h2>📊 Статистика</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-regions">0</div>
+                    <div class="stat-label">Регионов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-buildings">0</div>
+                    <div class="stat-label">Зданий</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-models">0</div>
+                    <div class="stat-label">3D-моделей</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-views">0</div>
+                    <div class="stat-label">Просмотров</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 3D Viewer -->
+    <div id="viewer-container" class="viewer-container" style="display:none;">
+        <div class="viewer-header">
+            <h2 id="viewer-title">Просмотр модели</h2>
+            <button id="close-viewer" class="btn btn-close">&times;</button>
+        </div>
+        <div class="viewer-info" id="viewer-info"></div>
+        <div id="canvas-container"></div>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="/static/js/STLLoader.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

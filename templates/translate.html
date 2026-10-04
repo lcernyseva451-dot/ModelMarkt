@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ИИ-Переводчик — ModelMarkt</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .translator-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .translator-box {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+        .translator-box h2 {
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        .translator-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+        .translator-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .translator-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin: 16px 0;
+            flex-wrap: wrap;
+        }
+        .translator-controls select {
+            padding: 10px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 0.95rem;
+            min-width: 180px;
+        }
+        .translator-controls select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .translator-result {
+            width: 100%;
+            min-height: 150px;
+            padding: 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text);
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        .lang-label {
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+        .voice-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .voice-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+        .quick-phrases {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        .phrase-btn {
+            padding: 8px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .phrase-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">MM</span> ModelMarkt
+        </div>
+        <div class="nav-links">
+            <a href="/">Главная</a>
+            <a href="/map">Карта</a>
+            <a href="/premium">Премиум</a>
+            <a href="/translate" class="active">Переводчик</a>
+            <div id="auth-buttons">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/register" id="register-link">Регистрация</a>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="username-display"></span>
+                <button id="logout-btn" class="btn btn-sm">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="translator-container">
+            <div class="header-section">
+                <h1>🌐 ИИ-Переводчик</h1>
+                <p>Переводите текст на английский, французский и китайский с помощью ИИ</p>
+            </div>
+
+            <div class="translator-box">
+                <h2>Перевод текста</h2>
+                
+                <label class="lang-label">Исходный текст:</label>
+                <textarea id="input-text" class="translator-input" placeholder="Введите текст для перевода..."></textarea>
+                
+                <div class="translator-controls">
+                    <select id="target-lang">
+                        <option value="en">🇬🇧 English</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="zh">🇨🇳 中文</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="translateText()">Перевести</button>
+                    <button class="voice-btn" onclick="speakText()" title="Озвучить">🔊</button>
+                </div>
+
+                <label class="lang-label">Перевод:</label>
+                <div id="translation-result" class="translator-result">
+                    Здесь появится перевод...
+                </div>
+            </div>
+
+            <div class="translator-box">
+                <h2>⚡ Быстрые фразы</h2>
+                <div class="translator-controls" style="margin-bottom:16px;">
+                    <select id="phrase-lang" onchange="updatePhrases()">
+                        <option value="all">Все языки</option>
+                        <option value="en">🇬🇧 English</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="zh">🇨🇳 中文</option>
+                    </select>
+                </div>
+                <div class="quick-phrases" id="quick-phrases">
+                    <button class="phrase-btn" onclick="setPhrase('Привет, как дела?')">Привет, как дела?</button>
+                    <button class="phrase-btn" onclick="setPhrase('Спасибо большое')">Спасибо большое</button>
+                    <button class="phrase-btn" onclick="setPhrase('Где находится музей?')">Где находится музей?</button>
+                    <button class="phrase-btn" onclick="setPhrase('Я люблю этот город')">Я люблю этот город</button>
+                    <button class="phrase-btn" onclick="setPhrase('Помогите мне')">Помогите мне</button>
+                    <button class="phrase-btn" onclick="setPhrase('Сколько это стоит?')">Сколько это стоит?</button>
+                    <button class="phrase-btn" onclick="setPhrase('Красивый исторический дом')">Красивый исторический дом</button>
+                    <button class="phrase-btn" onclick="setPhrase('Старый дворец на площади')">Старый дворец на площади</button>
+                    <button class="phrase-btn" onclick="setPhrase('Большая библиотека в парке')">Большая библиотека в парке</button>
+                    <button class="phrase-btn" onclick="setPhrase('Мост через реку')">Мост через реку</button>
+                </div>
+            </div>
+
+            <div class="translator-box">
+                <h2>📚 Словарь</h2>
+                <div id="dictionary" class="translator-result">
+                    Введите текст и нажмите "Перевести", чтобы добавить слова в словарь
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/translate.js"></script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ region.name }} — ModelMarkt</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">MM</span> ModelMarkt
+        </div>
+        <div class="nav-links">
+            <a href="/">Главная</a>
+            <a href="/premium">Премиум</a>
+            <div id="auth-buttons">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/register" id="register-link">Регистрация</a>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="username-display"></span>
+                <button id="logout-btn" class="btn btn-sm">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <a href="/" class="back-link">← Назад к регионам</a>
+
+        <section class="region-detail">
+            <h1>{{ region.name }}</h1>
+            <div class="region-meta">
+                <div class="meta-item">
+                    <strong>🏙️ Столица:</strong> {{ region.capital }}
+                </div>
+                <div class="meta-item">
+                    <strong>👥 Население:</strong> {{ region.population }}
+                </div>
+                <div class="meta-item">
+                    <strong>📅 Год основания:</strong> {{ region.founded_year }}
+                </div>
+                <div class="meta-item">
+                    <strong>🏛️ Зданий:</strong> {{ buildings|length }}
+                </div>
+            </div>
+            <p class="region-description">{{ region.description }}</p>
+        </section>
+
+        <section class="buildings-list">
+            <h2>Исторические здания</h2>
+            <div class="models-grid">
+                {% for b in buildings %}
+                <div class="model-card" onclick="window.location.href='/building/{{ b.slug }}'">
+                    <div class="model-preview building-preview">
+                        {% if b.image %}
+                        <img src="/uploads/{{ b.image }}" alt="{{ b.name }}">
+                        {% else %}
+                        🏛️
+                        {% endif %}
+                        {% if b.is_premium %}
+                        <span class="premium-lock">⭐ PREMIUM</span>
+                        {% endif %}
+                    </div>
+                    <div class="model-info">
+                        <h3>{{ b.name }}</h3>
+                        <p>{{ b.era }} · {{ b.year_built }}</p>
+                        <p>{{ b.architect }}</p>
+                        <p>{{ b.description[:120] }}{% if b.description|length > 120 %}...{% endif %}</p>
+                        <span class="model-type">{{ b.style }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <div class="content-with-sidebar">
+            <div class="main-content"></div>
+            <div class="sidebar">
+                <h3>Реклама</h3>
+                {% for ad in sidebar_ads %}
+                <a href="{{ ad.link_url }}" target="_blank" class="sidebar-ad" onclick="trackAdClick({{ ad.id }})">
+                    {% if ad.image %}
+                    <img src="/uploads/{{ ad.image }}" alt="{{ ad.title }}">
+                    {% else %}
+                    <div class="ad-placeholder">📢</div>
+                    {% endif %}
+                    <div class="ad-text">
+                        <strong>{{ ad.title }}</strong>
+                        <p>{{ ad.description[:80] }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

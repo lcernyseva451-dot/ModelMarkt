@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ building.name }} — ModelMarkt</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/translate.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">MM</span> ModelMarkt
+        </div>
+        <div class="nav-links">
+            <a href="/">Главная</a>
+            <a href="/map">Карта</a>
+            <a href="/premium">Премиум</a>
+            <div id="auth-buttons">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/register" id="register-link">Регистрация</a>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="username-display"></span>
+                <button id="logout-btn" class="btn btn-sm">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <a href="/region/{{ building.region.slug }}" class="back-link">← Назад к {{ building.region.name }}</a>
+
+        <section class="building-detail">
+            <div class="building-header">
+                <h1>{{ building.name }}</h1>
+                {% if building.is_premium %}
+                <span class="premium-badge-large">⭐ PREMIUM</span>
+                {% endif %}
+            </div>
+
+            <div class="building-meta-grid">
+                <div class="meta-card">
+                    <span class="meta-icon">📅</span>
+                    <div class="meta-content">
+                        <span class="meta-label">Эпоха</span>
+                        <span class="meta-value">{{ building.era }}</span>
+                    </div>
+                </div>
+                <div class="meta-card">
+                    <span class="meta-icon">🏗️</span>
+                    <div class="meta-content">
+                        <span class="meta-label">Год постройки</span>
+                        <span class="meta-value">{{ building.year_built }}</span>
+                    </div>
+                </div>
+                {% if building.year_restored %}
+                <div class="meta-card">
+                    <span class="meta-icon">🔨</span>
+                    <div class="meta-content">
+                        <span class="meta-label">Восстановление</span>
+                        <span class="meta-value">{{ building.year_restored }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="meta-card">
+                    <span class="meta-icon">👤</span>
+                    <div class="meta-content">
+                        <span class="meta-label">Архитектор</span>
+                        <span class="meta-value">{{ building.architect }}</span>
+                    </div>
+                </div>
+                <div class="meta-card">
+                    <span class="meta-icon">🎨</span>
+                    <div class="meta-content">
+                        <span class="meta-label">Стиль</span>
+                        <span class="meta-value">{{ building.style }}</span>
+                    </div>
+                </div>
+                <div class="meta-card">
+                    <span class="meta-icon">📍</span>
+                    <div class="meta-content">
+                        <span class="meta-label">Адрес</span>
+                        <span class="meta-value">{{ building.address }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="building-description">
+                <h2>Описание</h2>
+                <p>{{ building.description }}</p>
+
+                <h2>Историческая значимость</h2>
+                <p>{{ building.historical_significance }}</p>
+            </div>
+
+            <!-- Аудио-перевод -->
+            <div class="audio-translate-section">
+                <h2>🌍 Аудио-перевод (нейросеть)</h2>
+                <p>Прослушайте описание здания на английском, французском и китайском языках</p>
+                <div class="audio-buttons">
+                    <button class="audio-btn btn-en" onclick="speakText('{{ building.name }}. {{ building.description }}', 'en')">
+                        🇬🇧 English
+                    </button>
+                    <button class="audio-btn btn-fr" onclick="speakText('{{ building.name }}. {{ building.description }}', 'fr')">
+                        🇫🇷 Français
+                    </button>
+                    <button class="audio-btn btn-zh" onclick="speakText('{{ building.name }}. {{ building.description }}', 'zh')">
+                        🇨🇳 中文
+                    </button>
+                    <button class="audio-btn btn-stop" onclick="stopSpeaking()">
+                        ⏹ Стоп
+                    </button>
+                </div>
+                <div id="audio-status" class="audio-status"></div>
+            </div>
+        </section>
+
+        <!-- 3D Модели здания -->
+        <section class="models-3d-section">
+            <h2>🎮 3D-модели</h2>
+            {% if models_3d %}
+            <div class="models-grid">
+                {% for model in models_3d %}
+                <div class="model-card" onclick="openViewer({{ model.id }})">
+                    <div class="model-preview">
+                        {{ model.file_type|upper }}
+                    </div>
+                    <div class="model-info">
+                        <h3>{{ model.name }}</h3>
+                        <p>{{ (model.file_size / 1024 / 1024)|round(2) }} MB</p>
+                        {% if model.is_featured %}
+                        <span class="featured-badge">⭐ Избранное</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="icon">📦</div>
+                <h3>3D-моделей пока нет</h3>
+                <p>Модели будут добавлены в ближайшее время</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- Близкие здания -->
+        {% if nearby %}
+        <section class="nearby-section">
+            <h2>📍 Другие здания {{ building.region.name }}</h2>
+            <div class="models-grid">
+                {% for b in nearby %}
+                <div class="model-card" onclick="window.location.href='/building/{{ b.slug }}'">
+                    <div class="model-preview building-preview">
+                        {% if b.image %}
+                        <img src="/uploads/{{ b.image }}" alt="{{ b.name }}">
+                        {% else %}
+                        🏛️
+                        {% endif %}
+                    </div>
+                    <div class="model-info">
+                        <h3>{{ b.name }}</h3>
+                        <p>{{ b.era }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Сайдбар с рекламой -->
+        <div class="content-with-sidebar">
+            <div class="main-content"></div>
+            <div class="sidebar">
+                <h3>Реклама</h3>
+                {% for ad in sidebar_ads %}
+                <a href="{{ ad.link_url }}" target="_blank" class="sidebar-ad" onclick="trackAdClick({{ ad.id }})">
+                    {% if ad.image %}
+                    <img src="/uploads/{{ ad.image }}" alt="{{ ad.title }}">
+                    {% else %}
+                    <div class="ad-placeholder">📢</div>
+                    {% endif %}
+                    <div class="ad-text">
+                        <strong>{{ ad.title }}</strong>
+                        <p>{{ ad.description[:80] }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <!-- 3D Viewer -->
+    <div id="viewer-container" class="viewer-container" style="display:none;">
+        <div class="viewer-header">
+            <h2 id="viewer-title">Просмотр модели</h2>
+            <button id="close-viewer" class="btn btn-close">&times;</button>
+        </div>
+        <div class="viewer-info" id="viewer-info"></div>
+        <div id="canvas-container"></div>
+    </div>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/translate.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>

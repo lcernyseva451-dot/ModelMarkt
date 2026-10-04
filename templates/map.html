@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта — ModelMarkt</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/map.css">
+    <script>
+        // API ключ загружается с сервера (не виден в клиентском коде)
+        window.YANDEX_MAPS_KEY = '{{ yandex_maps_key }}';
+    </script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_maps_key }}&lang=ru_RU" type="text/javascript" id="yandex-maps-script"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">MM</span> ModelMarkt
+        </div>
+        <div class="nav-links">
+            <a href="/">Главная</a>
+            <a href="/map" class="active">Карта</a>
+            <a href="/premium">Премиум</a>
+            <a href="/translate">Переводчик</a>
+            <div id="auth-buttons">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/register" id="register-link">Регистрация</a>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="username-display"></span>
+                <span id="premium-badge" style="display:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:2px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;">★ PREMIUM</span>
+                <a href="/admin" id="admin-link" style="display:none;">⚙️ Админка</a>
+                <button id="logout-btn" class="btn btn-sm">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="map-hero">
+            <h1>🗺️ Карта утраченных зданий</h1>
+            <p>Точки на карте — здания, утраченные в разные эпохи. Кликните на точку для подробностей.</p>
+            <div class="map-filters">
+                <select id="filter-era">
+                    <option value="">Все эпохи</option>
+                    <option value="XVII век">XVII век</option>
+                    <option value="XVIII век">XVIII век</option>
+                    <option value="XIX век">XIX век</option>
+                </select>
+                <select id="filter-cause">
+                    <option value="">Все причины</option>
+                    <option value="Пожар">Пожар</option>
+                    <option value="Война">Война</option>
+                    <option value="Снос">Снос</option>
+                </select>
+                <button class="btn btn-primary" onclick="filterMap()">Применить</button>
+                <button class="btn btn-sm" onclick="resetFilters()">Сбросить</button>
+            </div>
+        </section>
+
+        <div class="map-layout">
+            <div id="map" class="map-container"></div>
+            <div id="map-sidebar" class="map-sidebar">
+                <div class="sidebar-placeholder">
+                    <p>👆 Нажмите на маркер на карте</p>
+                </div>
+            </div>
+        </div>
+
+        <section class="legend-section">
+            <h2>Условные обозначения</h2>
+            <div class="legend-grid">
+                <div class="legend-item">
+                    <span class="legend-dot legend-dot-verified" style="background:#22c55e;"></span>
+                    <span>Проверено</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot legend-dot-unverified" style="background:#f59e0b;"></span>
+                    <span>Ожидает проверки</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot legend-dot-premium" style="background:#a855f7;"></span>
+                    <span>С 3D-моделью</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/map.js"></script>
+</body>
+</html>

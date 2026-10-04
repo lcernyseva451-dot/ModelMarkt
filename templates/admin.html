@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — ModelMarkt</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">MM</span> ModelMarkt
+        </div>
+        <div class="nav-links">
+            <a href="/">Главная</a>
+            <a href="/map">Карта</a>
+            <a href="/admin" class="active">Админ-панель</a>
+            <div id="auth-buttons">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/register" id="register-link">Регистрация</a>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="username-display"></span>
+                <button id="logout-btn" class="btn btn-sm">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="header-section">
+            <h1>Админ-панель</h1>
+            <p>Управление регионами, зданиями, утраченными объектами, 3D-моделями и рекламой</p>
+        </div>
+
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Дашборд</button>
+            <button class="tab-btn" onclick="switchTab('models')">📦 3D-модели</button>
+            <button class="tab-btn" onclick="switchTab('regions')">🗺️ Регионы</button>
+            <button class="tab-btn" onclick="switchTab('buildings')">🏛️ Здания</button>
+            <button class="tab-btn" onclick="switchTab('lost')">🏚️ Утраченные</button>
+            <button class="tab-btn" onclick="switchTab('users')">👥 Пользователи</button>
+        </div>
+
+        <!-- Дашборд -->
+        <div id="tab-dashboard" class="admin-tab active">
+            <div class="admin-section">
+                <h2>📊 Статистика сайта</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-stat-users">0</div>
+                        <div class="stat-label">Пользователей</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-stat-regions">0</div>
+                        <div class="stat-label">Регионов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-stat-buildings">0</div>
+                        <div class="stat-label">Зданий</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-stat-3d">0</div>
+                        <div class="stat-label">3D-моделей</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-stat-views">0</div>
+                        <div class="stat-label">Просмотров</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="admin-stat-premium">0</div>
+                        <div class="stat-label">Премиум</div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-section">
+                <h2>⚡ Быстрые действия</h2>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="switchTab('models')">📦 Загрузить модель</button>
+                    <button class="btn btn-primary" onclick="switchTab('regions')">🗺️ Добавить регион</button>
+                    <button class="btn btn-primary" onclick="switchTab('buildings')">🏛️ Добавить здание</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-models" class="admin-tab">
+            <div class="admin-section">
+                <h2>Загрузить 3D-модель</h2>
+                <form id="upload-form" class="upload-form">
+                    <div class="form-group">
+                        <label for="model-name">Название модели</label>
+                        <input type="text" id="model-name" placeholder="Введите название">
+                    </div>
+                    <div class="form-group">
+                        <label for="model-description">Описание</label>
+                        <textarea id="model-description" rows="3" placeholder="Краткое описание"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="model-file">Файл модели</label>
+                        <div class="file-upload-wrapper">
+                            <input type="file" id="model-file" accept=".obj,.glb,.gltf,.fbx,.stl,.ply,.step,.stp">
+                            <div id="file-name">Выберите файл</div>
+                        </div>
+                    </div>
+                    <div id="upload-error" class="error-message"></div>
+                    <div id="upload-success" class="success-message"></div>
+                    <button type="submit" class="btn btn-primary">Загрузить</button>
+                </form>
+            </div>
+            <div class="admin-section">
+                <h2>Список моделей</h2>
+                <div id="admin-models-list" class="models-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-regions" class="admin-tab" style="display:none;">
+            <div class="admin-section">
+                <h2>Добавить регион</h2>
+                <form id="region-form" class="upload-form">
+                    <div class="form-group">
+                        <label for="region-name">Название</label>
+                        <input type="text" id="region-name" placeholder="Рязанская область" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="region-slug">URL-адрес (slug)</label>
+                        <input type="text" id="region-slug" placeholder="ryazan" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="region-desc">Описание</label>
+                        <textarea id="region-desc" rows="3" placeholder="Описание региона"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="region-capital">Столица</label>
+                        <input type="text" id="region-capital" placeholder="Рязань">
+                    </div>
+                    <div class="form-group">
+                        <label for="region-population">Население</label>
+                        <input type="text" id="region-population" placeholder="1020 тыс">
+                    </div>
+                    <div class="form-group">
+                        <label for="region-founded">Год основания</label>
+                        <input type="text" id="region-founded" placeholder="1095">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить регион</button>
+                </form>
+            </div>
+            <div class="admin-section">
+                <h2>Список регионов</h2>
+                <div id="admin-regions-list" class="models-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-buildings" class="admin-tab" style="display:none;">
+            <div class="admin-section">
+                <h2>Добавить здание</h2>
+                <form id="building-form" class="upload-form">
+                    <div class="form-group">
+                        <label for="building-name">Название</label>
+                        <input type="text" id="building-name" placeholder="Рязанский Кремль" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="building-slug">URL-адрес (slug)</label>
+                        <input type="text" id="building-slug" placeholder="ryazan-kremlin" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="building-region">Регион</label>
+                        <select id="building-region" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="building-era">Эпоха</label>
+                        <input type="text" id="building-era" placeholder="XVII век">
+                    </div>
+                    <div class="form-group">
+                        <label for="building-year">Год постройки</label>
+                        <input type="text" id="building-year" placeholder="1693">
+                    </div>
+                    <div class="form-group">
+                        <label for="building-architect">Архитектор</label>
+                        <input type="text" id="building-architect" placeholder="Неизвестен">
+                    </div>
+                    <div class="form-group">
+                        <label for="building-style">Стиль</label>
+                        <input type="text" id="building-style" placeholder="Рязанское барокко">
+                    </div>
+                    <div class="form-group">
+                        <label for="building-address">Адрес</label>
+                        <input type="text" id="building-address" placeholder="Рязань, Кремлёвский бульвар">
+                    </div>
+                    <div class="form-group">
+                        <label for="building-desc">Описание</label>
+                        <textarea id="building-desc" rows="4" placeholder="Подробное описание"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="building-hist">Историческая значимость</label>
+                        <textarea id="building-hist" rows="3" placeholder="Почему это важно"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="building-premium"> ⭐ Премиум-контент
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить здание</button>
+                </form>
+            </div>
+            <div class="admin-section">
+                <h2>Список зданий</h2>
+                <div id="admin-buildings-list" class="models-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-lost" class="admin-tab" style="display:none;">
+            <div class="admin-section">
+                <h2>Добавить утраченное здание</h2>
+                <form id="lost-form" class="upload-form">
+                    <div class="form-group">
+                        <label for="lost-name">Название</label>
+                        <input type="text" id="lost-name" placeholder="Успенский собор" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-slug">URL-адрес (slug)</label>
+                        <input type="text" id="lost-slug" placeholder="lost-umспен" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-city">Город</label>
+                        <input type="text" id="lost-city" placeholder="Рязань" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-region">Регион</label>
+                        <select id="lost-region"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-address">Адрес</label>
+                        <input type="text" id="lost-address" placeholder="Рязань, центр">
+                    </div>
+                    <div class="form-group">
+                        <label>Координаты</label>
+                        <div style="display: flex; gap: 12px;">
+                            <input type="number" step="any" id="lost-lat" placeholder="Широта (54.6300)" style="flex:1;" required>
+                            <input type="number" step="any" id="lost-lon" placeholder="Долгота (39.7350)" style="flex:1;" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-era">Эпоха</label>
+                        <input type="text" id="lost-era" placeholder="XVIII век">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-year-built">Год постройки</label>
+                        <input type="text" id="lost-year-built" placeholder="1777">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-year-destroyed">Год утрачен</label>
+                        <input type="text" id="lost-year-destroyed" placeholder="1963">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-cause">Причина утраты</label>
+                        <input type="text" id="lost-cause" placeholder="Умышленное разрушение">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-style">Стиль</label>
+                        <input type="text" id="lost-style" placeholder="Елизаветинское барокко">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-architect">Архитектор</label>
+                        <input type="text" id="lost-architect" placeholder="А.Ф. Кокоринов">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-floors">Этажность</label>
+                        <input type="number" id="lost-floors" placeholder="3">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-materials">Материалы</label>
+                        <input type="text" id="lost-materials" placeholder="Камень, известняк">
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-desc">Описание</label>
+                        <textarea id="lost-desc" rows="3" placeholder="Краткое описание"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-spravka">Историческая справка</label>
+                        <textarea id="lost-spravka" rows="4" placeholder="Подробная история здания"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="lost-source">Источник 3D-модели</label>
+                        <input type="text" id="lost-source" placeholder="Архивные фото 1950-х">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="lost-verified"> ✅ Проверено историками
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Добавить утраченное здание</button>
+                </form>
+            </div>
+            <div class="admin-section">
+                <h2>Список утраченных зданий</h2>
+                <div id="admin-lost-buildings-list" class="models-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-users" class="admin-tab" style="display:none;">
+            <div class="admin-section">
+                <h2>👥 Управление пользователями</h2>
+                <div id="admin-users-list" class="models-list"></div>
+            </div>
+        </div>
+
+
+    </main>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/admin.js"></script>
+</body>
+</html>

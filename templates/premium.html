@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Премиум — ModelMarkt</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">MM</span> ModelMarkt
+        </div>
+        <div class="nav-links">
+            <a href="/">Главная</a>
+            <a href="/premium" class="active">Премиум</a>
+            <div id="auth-buttons">
+                <a href="/login" id="login-link">Войти</a>
+                <a href="/register" id="register-link">Регистрация</a>
+            </div>
+            <div id="user-info" style="display:none;">
+                <span id="username-display"></span>
+                <span id="premium-badge" style="display:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;padding:2px 8px;border-radius:6px;font-size:0.75rem;font-weight:700;">★ PREMIUM</span>
+                <button id="logout-btn" class="btn btn-sm">Выйти</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="premium-hero">
+            <h1>⭐ Премиум доступ</h1>
+            <p>Откройте полный доступ ко всем 3D-моделям исторических зданий России</p>
+        </section>
+
+        <section class="premium-plans">
+            <h2>Премиум подписка</h2>
+            <div class="plans-toggle">
+                <button class="toggle-btn active" onclick="togglePlan('monthly')">Помесячно</button>
+                <button class="toggle-btn" onclick="togglePlan('yearly')">Годовой (-20%)</button>
+            </div>
+            <div class="plans-grid">
+                <div class="plan-card plan-card-featured" onclick="activatePlan('premium')">
+                    <div class="plan-badge">Лучший выбор</div>
+                    <div class="plan-header">
+                        <h3>Премиум</h3>
+                        <div class="plan-price">
+                            <span class="price-amount" data-monthly="499" data-yearly="4990">499</span>
+                            <span class="price-period">мес</span>
+                        </div>
+                    </div>
+                    <ul class="plan-features">
+                        <li>✅ Все 3D-модели без ограничений</li>
+                        <li>✅ Скачивание моделей (.obj, .glb)</li>
+                        <li>✅ Эксклюзивные материалы</li>
+                        <li>✅ Приоритетная поддержка</li>
+                        <li>✅ Без рекламы</li>
+                        <li>✅ Доступ к ИИ-переводчику</li>
+                    </ul>
+                    <button class="btn btn-premium btn-block">Выбрать премиум</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="premium-faq">
+            <h2>❓ Часто задаваемые вопросы</h2>
+            <div class="faq-list">
+                <div class="faq-item">
+                    <h3>Что такое премиум-доступ?</h3>
+                    <p>Премиум-подписка открывает полный доступ ко всем 3D-моделям исторических зданий, возможность скачивания файлов и просмотра эксклюзивного контента.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Какие форматы файлов доступны?</h3>
+                    <p>В премиуме доступны форматы .obj, .glb, .gltf для скачивания. Все модели совместимы с популярными 3D-редакторами.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Как отменить подписку?</h3>
+                    <p>Вы можете отменить подписку в любой момент в личном кабинете. Доступ сохранится до конца оплаченного периода.</p>
+                </div>
+            </div>
+        </section>
+
+        <div id="premium-error" class="error-message"></div>
+        <div id="premium-success" class="success-message"></div>
+    </main>
+
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+    <script>
+        let current_period = 'monthly';
+
+        function togglePlan(period) {
+            current_period = period;
+            document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            updatePrices();
+        }
+
+        function updatePrices() {
+            document.querySelectorAll('.price-amount').forEach(el => {
+                const val = el.getAttribute(`data-${current_period}`);
+                el.textContent = val;
+            });
+            document.querySelectorAll('.price-period').forEach(el => {
+                el.textContent = current_period === 'monthly' ? 'мес' : 'год';
+            });
+        }
+
+        async function activatePlan(planType) {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/premium/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        plan_type: planType,
+                        period: current_period
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    alert(`Подписка "${data.plan_name}" активирована!`);
+                    location.reload();
+                } else {
+                    document.getElementById('premium-error').textContent = data.error;
+                    document.getElementById('premium-error').classList.add('show');
+                }
+            } catch (err) {
+                document.getElementById('premium-error').textContent = 'Ошибка соединения';
+                document.getElementById('premium-error').classList.add('show');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
+                    .then(r => r.json())
+                    .then(user => {
+                        currentUser = user;
+                        updateAuthUI(true);
+                        const badge = document.getElementById('premium-badge');
+                        if (badge) badge.style.display = 'inline';
+                    })
+                    .catch(() => updateAuthUI(false));
+            } else {
+                updateAuthUI(false);
+            }
+            updatePrices();
+        });
+    </script>
+</body>
+</html>
